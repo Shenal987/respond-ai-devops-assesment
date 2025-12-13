@@ -58,6 +58,20 @@ Resources:
       SubnetId: !Ref PrivateSubnet2
       RouteTableId: !Ref PrivateRouteTable
 
+  VPCEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      VpcId: !Ref LambdaVPC
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.s3"
+      RouteTableIds:
+        - !Ref PrivateRouteTable
+      VpcEndpointType: Gateway
+
+  S3JsonBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: respond-json-bucket-dev
+
   LambdaSG:
     Type: AWS::EC2::SecurityGroup
     Properties:
