@@ -71,6 +71,15 @@ Resources:
     Type: AWS::S3::Bucket
     Properties:
       BucketName: respond-json-bucket-dev
+      NotificationConfiguration:
+        LambdaConfigurations:
+          - Event: s3:ObjectCreated:*
+            Filter:
+                S3Key:
+                  Rules:
+                    - Name: prefix
+                      Value: original/
+            Function: !GetAtt TriggerFunction.Arn
 
   LambdaSG:
     Type: AWS::EC2::SecurityGroup
@@ -91,10 +100,27 @@ Resources:
         SubnetIds:
           - !Ref PrivateSubnet1
           - !Ref PrivateSubnet2
+      Policies:
+      - Statement:
+          - Effect: Allow
+            Action:
+              - s3:GetObject
+              - s3:PutObject
+              - s3:DeleteObject
+            Resource: arn:aws:s3:::respond-json-bucket-dev/*
     Metadata:
       Dockerfile: Dockerfile
       DockerContext: ./src
       DockerTag: python3.12-v1
+
+  LambdaInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !GetAtt TriggerFunction.Arn
+      Action: lambda:InvokeFunction
+      Principal: s3.amazonaws.com
+      SourceAccount: !Ref AWS::AccountId
+      SourceArn: !GetAtt S3JsonBucket.Arn
 
 Outputs:
 
